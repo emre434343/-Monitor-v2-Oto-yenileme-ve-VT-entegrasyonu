@@ -6,22 +6,22 @@ import threading
 import webbrowser
 import os
 
-class UsomPanel:
+class CyberMonitor:
     def __init__(self, root):
         self.root = root
-        self.root.title("USOM Siber Tehdit Takip Paneli PRO")
+        self.root.title("Cyber Threat Intelligence Monitor") # İsim değişti
         self.root.geometry("1000x700")
         self.root.configure(bg="#121212")
 
         # Değişkenler
         self.all_data = []
-        self.marquee_text = "Veriler yükleniyor..."
+        self.marquee_text = "Tehdit verileri senkronize ediliyor..."
         
         # --- ÜST PANEL ---
         self.top_frame = tk.Frame(root, bg="#1f1f1f", height=60)
         self.top_frame.pack(fill="x", side="top")
         
-        self.title_label = tk.Label(self.top_frame, text="🛡️ USOM PRO MONITOR", fg="#00ff00", bg="#1f1f1f", font=("Segoe UI", 16, "bold"))
+        self.title_label = tk.Label(self.top_frame, text="🛡️ CYBER SHIELD MONITOR", fg="#00ff00", bg="#1f1f1f", font=("Segoe UI", 16, "bold"))
         self.title_label.pack(side="left", padx=20)
         
         self.clock_label = tk.Label(self.top_frame, text="", fg="#00d4ff", bg="#1f1f1f", font=("Consolas", 12))
@@ -34,7 +34,7 @@ class UsomPanel:
         tk.Label(self.toolbar, text="🔍 Filtre:", fg="white", bg="#121212").pack(side="left", padx=10)
         self.search_entry = tk.Entry(self.toolbar, width=25, bg="#2a2a2a", fg="white", insertbackground="white")
         self.search_entry.pack(side="left", padx=5)
-        self.search_entry.bind("<KeyRelease>", lambda event: self.filter_data()) # Yazdıkça ara
+        self.search_entry.bind("<KeyRelease>", lambda event: self.filter_data())
 
         self.btn_report = tk.Button(self.toolbar, text="💾 Raporu Kaydet", command=self.save_report, bg="#28a745", fg="white", relief="flat")
         self.btn_report.pack(side="left", padx=10)
@@ -51,7 +51,7 @@ class UsomPanel:
         columns = ("id", "url", "type", "date")
         self.tree = ttk.Treeview(root, columns=columns, show="headings")
         self.tree.heading("id", text="ID")
-        self.tree.heading("url", text="Zararlı Adres / URL (VT için Tıkla)")
+        self.tree.heading("url", text="Tehdit Adresi / URL (Analiz için Çift Tıkla)")
         self.tree.heading("type", text="Tip")
         self.tree.heading("date", text="Tespit Tarihi")
         
@@ -61,7 +61,7 @@ class UsomPanel:
         self.tree.column("date", width=180, anchor="center")
         self.tree.pack(expand=True, fill="both", padx=10)
         
-        self.tree.bind("<Double-1>", self.open_virus_total) # Çift tıklama VT açar
+        self.tree.bind("<Double-1>", self.open_analysis)
 
         # --- KAYAN YAZI ---
         self.marquee_frame = tk.Frame(root, bg="#c00", height=25)
@@ -71,7 +71,7 @@ class UsomPanel:
 
         # Başlatıcılar
         self.update_clock()
-        self.auto_refresh_loop() # Oto yenileme döngüsü
+        self.auto_refresh_loop()
         self.animate_marquee()
 
     def update_clock(self):
@@ -81,6 +81,7 @@ class UsomPanel:
 
     def fetch_data(self):
         try:
+            # API linkini içeride tutuyoruz ama ekranda göstermiyoruz
             response = requests.get("https://www.usom.gov.tr/api/address/index", timeout=10)
             data = response.json()
             self.all_data = data.get('models', [])
@@ -89,11 +90,10 @@ class UsomPanel:
             latest = [item['url'] for item in self.all_data[:8]]
             self.marquee_text = " [KRİTİK TEHDİTLER] " + " • ".join(latest)
         except Exception as e:
-            print(f"Veri çekme hatası: {e}")
+            print(f"Veri senkronizasyon hatası.")
 
     def auto_refresh_loop(self):
         self.fetch_data()
-        # 300.000 ms = 5 dakika
         self.root.after(300000, self.auto_refresh_loop)
 
     def update_table(self, data_list):
@@ -109,20 +109,19 @@ class UsomPanel:
 
     def save_report(self):
         try:
-            filename = "tehditler.txt"
+            filename = "cyber_threat_report.txt" # Dosya adı değişti
             with open(filename, "w", encoding="utf-8") as f:
-                f.write(f"USOM TEHDİT RAPORU - {datetime.now()}\n")
+                f.write(f"CYBER THREAT REPORT - {datetime.now()}\n")
                 f.write("-" * 50 + "\n")
                 for item in self.all_data:
                     f.write(f"ID: {item['id']} | Adres: {item['url']} | Tip: {item['type']} | Tarih: {item['date']}\n")
             messagebox.showinfo("Başarılı", f"Rapor '{filename}' olarak kaydedildi.")
         except Exception as e:
-            messagebox.showerror("Hata", f"Dosya kaydedilemedi: {e}")
+            messagebox.showerror("Hata", "Dosya kaydedilemedi.")
 
-    def open_virus_total(self, event):
+    def open_analysis(self, event):
         item_id = self.tree.selection()[0]
         url_to_check = self.tree.item(item_id)['values'][1]
-        # VirusTotal arama linki (URL arama için)
         vt_url = f"https://www.virustotal.com/gui/search/{url_to_check}"
         webbrowser.open(vt_url)
 
@@ -136,5 +135,5 @@ class UsomPanel:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = UsomPanel(root)
+    app = CyberMonitor(root)
     root.mainloop()
